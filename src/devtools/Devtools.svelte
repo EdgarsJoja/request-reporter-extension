@@ -4,11 +4,16 @@
     import Request from './components/Request.svelte';
     import reportTemplate from './report-template';
     import Report from './components/Report.svelte';
+    import { filterByUrl } from './services/filters';
 
     let requests: ParsedRequest[] = [];
+    let displayRequests: ParsedRequest[] = [];
+
+    $: displayRequests = requests.filter((request) => filterByUrl(request, filterTextValue));
 
     let report: string = '';
     let showReport = false;
+    let filterTextValue = '';
 
     onMount(() => {
         chrome.devtools.panels.create('Request Reporter', null, './devtools.html', (panel) => {
@@ -27,6 +32,11 @@
     const addParsedRequest = (rawRequest: any): void => {
         const req = rawRequest.request;
         const resp = rawRequest.response;
+
+        if (!['fetch', 'xhr'].includes(rawRequest._resourceType)) {
+            return;
+        }
+
         rawRequest.getContent((responseContent) => {
             requests.push({
                 url: req.url,
@@ -74,21 +84,31 @@
         report = generateRequestReport(request);
         showReport = true;
     }
+
+    /**
+     * Returns whether the particular request should be highlighted.
+     *
+     * @param request
+     */
+    const highlightRequest = (request: ParsedRequest): boolean => {
+        return request.status >= 400;
+    }
 </script>
 
 <main class="content">
     <div class="actions">
         {#if !showReport}
-            <button type="button" on:click={clearRequests}><strong>Clear</strong></button>
+            <input type="text" class="action-filter" bind:value={filterTextValue} placeholder="Type to filter..." />
+            <button type="button" class="action-clear" on:click={clearRequests}>Clear All</button>
         {/if}
         {#if showReport}
-            <button type="button" on:click={() => showReport = false}>Back to Requests</button>
+            <button type="button" on:click={() => showReport = false}>&lt;&lt; Back</button>
         {/if}
     </div>
     {#if !showReport}
         <div class="requests">
-            {#each requests as req}
-                <div class="request" on:click={() => handleReport(req)}>
+            {#each displayRequests as req}
+                <div class="request" class:highlight="{highlightRequest(req)}" on:click={() => handleReport(req)}>
                     <Request request={req}/>
                 </div>
             {/each}
@@ -129,8 +149,23 @@
         box-shadow: 0 5px 5px 0 #8794AF;
     }
 
+    .action-filter {
+        height: 2em;
+        border-radius: 5px;
+        float: left;
+        position: relative;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: .5em
+    }
+
+    .action-clear {
+        float: right;
+    }
+
     .requests, .report {
-        padding-top: 4em;
+        padding-top: 2em;
+        padding-bottom: 2em;
     }
 
     .requests .request {
@@ -142,18 +177,24 @@
     }
 
     .request:hover {
-        color: #7952B3;
+        color: #16C79A;
         cursor: pointer;
     }
 
+    .request.highlight {
+        color: #E94560;
+    }
+
     button {
-        border: 1px solid #343A40;
-        background: transparent;
+        background: #16213E;
+        color: #E1E8EB;
         border-radius: 5px;
         padding: .5em 1em;
+        font-weight: bold;
     }
 
     button:hover {
         cursor: pointer;
+        color: #E94560;
     }
 </style>

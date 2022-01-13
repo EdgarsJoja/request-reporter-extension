@@ -3,7 +3,7 @@
 </script>
 
 <main class="content">
-    <pre>{report}</pre>
+    <textarea>{report}</textarea>
 </main>
 
 <style>
@@ -11,8 +11,14 @@
         padding: 1em;
     }
 
-    pre {
+    textarea {
         word-break: break-word;
         white-space: pre-wrap;
+        width: calc(100% - 1em);
+        height: 80vh;
+        padding: .5em;
+        border: none;
+        outline: none;
+        border-radius: 5px;
     }
 </style>
