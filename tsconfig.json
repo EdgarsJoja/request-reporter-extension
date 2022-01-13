@@ -1,0 +1,9 @@
+{
+  "extends": "@tsconfig/svelte/tsconfig.json",
+
+  "include": [
+    "src/**/*",
+    "../../../.config/JetBrains/PhpStorm2021.2/javascript/extLibs/global-types/node_modules/@types/chrome/index.d.ts"
+  ],
+  "exclude": ["node_modules/*", "__sapper__/*", "public/*"]
+}
